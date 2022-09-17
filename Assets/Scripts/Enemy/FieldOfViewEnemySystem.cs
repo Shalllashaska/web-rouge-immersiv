@@ -82,7 +82,6 @@ public class FieldOfViewEnemySystem : MonoBehaviour
     }
 
     private void PlayerFound(){
-        Debug.Log("Yes");
         _foundPlayer = true;
         _currentTimerToLose = 0;
         _enemyMaster.PlayerFound();
