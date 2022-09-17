@@ -12,7 +12,7 @@ public class Parametrs : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        _healthScript = GetComponent<Health>();
+        _healthScript = gameObject.GetComponent<Health>();
         _healthScript.InitHealth(Health);
         foreach (GameObject part in partsOfBody)
         {

@@ -4,6 +4,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Animations;
 
+[RequireComponent(typeof(InteractSystem))]
+[RequireComponent(typeof(InteractObjects))]
+[RequireComponent(typeof(CombatSystem))]
 public class Controls : MonoBehaviour
 {
     public float speedRotation = 10;
@@ -24,6 +27,7 @@ public class Controls : MonoBehaviour
     private CombatSystem _combatSystem;
     private InteractSystem _interactSystem;
     private MapScript _mapScript;
+    private InteractObjects _interactObjects;
 
 
     void Start()
@@ -32,6 +36,8 @@ public class Controls : MonoBehaviour
         _combatSystem = gameObject.GetComponent<CombatSystem>();
         _mainCamera = Camera.main;
         _interactSystem = gameObject.GetComponent<InteractSystem>();
+        _interactObjects = gameObject.GetComponent<InteractObjects>();
+        
         _mapScript = GameObject.Find("MapHolder").GetComponent<MapScript>();
     }
 
@@ -48,6 +54,11 @@ public class Controls : MonoBehaviour
         }
         if(Input.GetKeyDown(KeyCode.E)){
             Interact();
+            InteractObjects(true);
+        }
+        if (Input.GetKeyUp(KeyCode.E))
+        {
+            InteractObjects(false);
         }
         if(Input.GetKeyDown(KeyCode.Tab)){
             SwitchMap();
@@ -89,13 +100,26 @@ public class Controls : MonoBehaviour
     }
 
     private void Interact(){
-        RaycastHit hit = _interactSystem.CantInteract();
-        if(hit.collider != null){
-             if(Vector3.Distance(transform.position, hit.collider.transform.position) > interactDistance) return;
+        RaycastHit hitInteract = _interactSystem.CantInteract();
+        if(hitInteract.collider != null){
+             if(Vector3.Distance(transform.position, hitInteract.collider.transform.position) > interactDistance) return;
              //Interact Door
-             if(hit.collider.tag == "Button"){
-                 hit.collider.transform.GetComponentInParent<ButtonInteract>().Interact();
+             if(hitInteract.collider.tag == "Button"){
+                 hitInteract.collider.transform.GetComponentInParent<ButtonInteract>().Interact();
              }
+        }
+    }
+    
+    private void InteractObjects(bool takeObject){
+        if (!takeObject)
+        {
+            _interactObjects.DropObject(true);
+            return;
+        }
+        RaycastHit hitDarg = _interactSystem.CanDrag();
+        if(hitDarg.collider != null){
+            if(Vector3.Distance(transform.position, hitDarg.collider.transform.position) > interactDistance) return;
+            _interactObjects.TakeObject(hitDarg.collider.gameObject, transform.localScale.y / 2);
         }
     }
 }

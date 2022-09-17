@@ -17,7 +17,7 @@ public class Health : MonoBehaviour
 
     public void TakeDamage(float d){
         _currentHealth -= d;
-        Debug.Log(_currentHealth);
+        Debug.Log(gameObject.name + " Current Heal: " + _currentHealth);
         if(_currentHealth <= 0){
             _dead = true;
             Destroy(gameObject);
