@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Animations;
+using UnityEngine.Experimental.GlobalIllumination;
 
 [RequireComponent(typeof(InteractSystem))]
 [RequireComponent(typeof(InteractObjects))]
@@ -11,6 +12,7 @@ public class Controls : MonoBehaviour
 {
     public float speedRotation = 10;
     public float speedMovement = 10f;
+    public float timerToDragObject = 0.5f;
 
     public float multSpeed = 100f;
 
@@ -28,6 +30,11 @@ public class Controls : MonoBehaviour
     private InteractSystem _interactSystem;
     private MapScript _mapScript;
     private InteractObjects _interactObjects;
+    private GameObject _objInHands;
+    private float _timeOfHoldingKey = 0;
+    private bool _holdingKey;
+    private GameObject _objectBeforeDrag;
+    private GameObject _objectToDrag;
 
 
     void Start()
@@ -49,20 +56,47 @@ public class Controls : MonoBehaviour
         _movement.y = 0;
         
         RotatePlayer();
-        if(Input.GetMouseButton(0)){
+        if(Input.GetMouseButton(0) && !_objInHands){
             Shooting();
         }
-        if(Input.GetKeyDown(KeyCode.E)){
-            Interact();
-            InteractObjects(true);
-        }
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            _holdingKey = true;
+            if(_interactSystem.CanDrag().collider != null) _objectBeforeDrag = _interactSystem.CanDrag().collider.gameObject;
+        } 
         if (Input.GetKeyUp(KeyCode.E))
         {
-            InteractObjects(false);
+            _holdingKey = false;
+            if (_timeOfHoldingKey < timerToDragObject)
+            {
+                //Если быстро нажали клавишу и отжали, то взаимодействием с объектом
+                Interact();
+            }
+            else
+            {
+                //Если долго держали клавишу и отжали, значит держали объект и должны бросить его
+                DragObject(false);
+            }
+            _objectBeforeDrag = null;
         }
+
+        if (_timeOfHoldingKey >= timerToDragObject && !_objInHands && _interactSystem.CanDrag().collider != null)
+        {
+            //Если долго держим клвашиу, то подбераем предмет
+            _objectToDrag = _interactSystem.CanDrag().collider.gameObject;
+            if (_objectBeforeDrag == _objectToDrag)
+            {
+                DragObject(true);
+            }
+            _objectToDrag = null;
+        }
+
         if(Input.GetKeyDown(KeyCode.Tab)){
             SwitchMap();
         }
+
+        if (_holdingKey) _timeOfHoldingKey += Time.deltaTime;
+        else _timeOfHoldingKey = 0;
     }
 
     private void FixedUpdate()
@@ -107,19 +141,30 @@ public class Controls : MonoBehaviour
              if(hitInteract.collider.tag == "Button"){
                  hitInteract.collider.transform.GetComponentInParent<ButtonInteract>().Interact();
              }
+             
+             if(hitInteract.collider.tag == "TakableObject"){
+                 //TODO Take object
+                 Destroy(hitInteract.collider.gameObject);
+             }
         }
     }
     
-    private void InteractObjects(bool takeObject){
+    private void DragObject(bool takeObject){
         if (!takeObject)
         {
             _interactObjects.DropObject(true);
             return;
         }
-        RaycastHit hitDarg = _interactSystem.CanDrag();
-        if(hitDarg.collider != null){
-            if(Vector3.Distance(transform.position, hitDarg.collider.transform.position) > interactDistance) return;
-            _interactObjects.TakeObject(hitDarg.collider.gameObject, transform.localScale.y / 2);
+        RaycastHit hitDrag = _interactSystem.CanDrag();
+        if(hitDrag.collider != null){
+            if(Vector3.Distance(transform.position, hitDrag.collider.transform.position) > interactDistance) return;
+            _interactObjects.TakeObject(hitDrag.collider.gameObject, transform.localScale.y );
+            SetObjectInHands(hitDrag.collider.gameObject);
         }
+    }
+
+    public void SetObjectInHands(GameObject go)
+    {
+        _objInHands = go;
     }
 }

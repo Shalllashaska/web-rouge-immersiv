@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(Parametrs))]
+[RequireComponent(typeof(BodyPart))]
 public class Health : MonoBehaviour
 {
 
@@ -24,6 +26,11 @@ public class Health : MonoBehaviour
         }
     }
 
+    public float GetHealth()
+    {
+        return _currentHealth;
+    }
+    
     
    
 }

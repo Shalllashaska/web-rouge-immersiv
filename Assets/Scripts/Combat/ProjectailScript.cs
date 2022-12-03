@@ -7,9 +7,9 @@ public class ProjectailScript : MonoBehaviour
     public GameObject inpactParticle;
     public LayerMask canHit;
 
-    private int _damage;
+    private float _damage;
 
-    public void SetDamage(int d){
+    public void SetDamage(float d){
         _damage = d;
     }
 
@@ -23,7 +23,7 @@ public class ProjectailScript : MonoBehaviour
             other.gameObject.GetComponent<BodyPart>().TakeDamage(_damage);
         }
         
-        GameObject inpact = GameObject.Instantiate(inpactParticle, transform.position, Quaternion.identity);
+        GameObject inpact = Instantiate(inpactParticle, transform.position, Quaternion.identity);
         Destroy(inpact, 5f);
         Destroy(gameObject);
     }

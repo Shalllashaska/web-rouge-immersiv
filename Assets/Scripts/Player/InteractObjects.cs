@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
+[RequireComponent(typeof(Rigidbody))]
+[RequireComponent(typeof(Controls))]
 public class InteractObjects : MonoBehaviour
 {
     public float throwForce = 5f;
@@ -20,10 +22,12 @@ public class InteractObjects : MonoBehaviour
     private Vector3 _supposedPosition;
     private float _distanceBetweenCurrentAndSupposedPosition;
     private Vector3 _lastAvailablePoint;
+    private Controls _controls;
 
     private void Start()
     {
         _mainCamera = Camera.main;
+        _controls = GetComponent<Controls>();
     }
 
     private void Update()
@@ -73,6 +77,11 @@ public class InteractObjects : MonoBehaviour
         if (!_objectInHands) return;
         if (isThrowObject)
         {
+            if (_objectInHands.TryGetComponent(out DestructibleObjects destructScript))
+            {
+                destructScript.StartDetectCollisions();
+            }
+            
             Vector3 endPoint;
             endPoint = _mousePosition;
             if (Vector3.Distance(transform.position, _mousePosition) >= draggableDistance * 2)
@@ -82,16 +91,17 @@ public class InteractObjects : MonoBehaviour
             }
             Vector3 differenceVector = endPoint - _objectInHands.transform.position ;
             float mult = 1;
-            Debug.Log("dist " + Vector3.Distance(_objectInHands.transform.position, transform.position));
-            Debug.Log("pos " + _objectInHands.transform.position);
             if (Vector3.Distance(_objectInHands.transform.position, transform.position) < draggableDistance - 0.5f)
             {
                 mult = 2;
             }
             _rigidbodyInHands.AddForce(differenceVector * throwForce * mult, ForceMode.Impulse);
+            
         }
-        _objectInHands = null;
+
+        SetObjectNull();
         _rigidbodyInHands.useGravity = true;
+        
     }
     
     private bool _CanTranslateObject()
@@ -107,5 +117,11 @@ public class InteractObjects : MonoBehaviour
         }
         _lastAvailablePoint = Vector3.zero;
         return true;
-    } 
+    }
+
+    private void SetObjectNull()
+    {
+        _controls.SetObjectInHands(null);
+        _objectInHands = null;
+    }
 }
